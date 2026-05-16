@@ -48,9 +48,11 @@ local function EnsureDB()
         end
     end
     TotemBarDB.point = TotemBarDB.point or { "CENTER", "UIParent", "CENTER", 0, -150 }
+    TotemBarDB.templates = TotemBarDB.templates or {}
 end
 
 local function ApplySpell(btn, spell)
+    btn:SetAttribute("type1", "spell")
     btn:SetAttribute("spell", spell)
     local _, _, icon = GetSpellInfo(spell)
     btn.icon:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
@@ -71,6 +73,48 @@ local function FlushPending()
         ApplySpell(buttons[element], spell)
     end
     wipe(pendingAssign)
+end
+
+local function SaveTemplate(name)
+    local tpl = {}
+    for _, e in ipairs(ELEMENTS) do
+        tpl[e] = TotemBarDB.assigned[e]
+    end
+    TotemBarDB.templates[name] = tpl
+    print("|cffffff00TotemBar:|r saved template '" .. name .. "'.")
+end
+
+local function LoadTemplate(name)
+    local tpl = TotemBarDB.templates[name]
+    if not tpl then
+        print("|cffffff00TotemBar:|r no template named '" .. name .. "'. Try /tb list.")
+        return
+    end
+    for _, e in ipairs(ELEMENTS) do
+        if tpl[e] then AssignSpell(e, tpl[e]) end
+    end
+    print("|cffffff00TotemBar:|r loaded template '" .. name .. "'.")
+end
+
+local function DeleteTemplate(name)
+    if TotemBarDB.templates[name] then
+        TotemBarDB.templates[name] = nil
+        print("|cffffff00TotemBar:|r deleted template '" .. name .. "'.")
+    else
+        print("|cffffff00TotemBar:|r no template named '" .. name .. "'.")
+    end
+end
+
+local function ListTemplates()
+    if not next(TotemBarDB.templates) then
+        print("|cffffff00TotemBar:|r no templates saved. Use /tb save <name> to save the current set.")
+        return
+    end
+    print("|cffffff00TotemBar templates:|r")
+    for name, tpl in pairs(TotemBarDB.templates) do
+        print(string.format("  %s - F:%s  E:%s  A:%s  W:%s",
+            name, tpl.Fire or "-", tpl.Earth or "-", tpl.Air or "-", tpl.Water or "-"))
+    end
 end
 
 local function HideMenu()
@@ -200,12 +244,32 @@ local function CreateBar()
             "Button",
             "TotemBarButton" .. element,
             frame,
-            "SecureActionButtonTemplate,ActionButtonTemplate"
+            "SecureActionButtonTemplate"
         )
         btn:SetSize(40, 40)
         btn:SetPoint("LEFT", frame, "LEFT", (i - 1) * 44 + 4, 0)
         btn:RegisterForClicks("AnyDown", "AnyUp")
-        btn:SetAttribute("type1", "spell")
+
+        local r, g, b = unpack(ELEMENT_COLOR[element])
+        local border = btn:CreateTexture(nil, "BACKGROUND")
+        border:SetPoint("TOPLEFT", -2, 2)
+        border:SetPoint("BOTTOMRIGHT", 2, -2)
+        border:SetColorTexture(r, g, b, 1)
+
+        btn.icon = btn:CreateTexture(nil, "ARTWORK")
+        btn.icon:SetAllPoints()
+        btn.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        local pushed = btn:CreateTexture(nil, "ARTWORK")
+        pushed:SetAllPoints()
+        pushed:SetColorTexture(1, 1, 1, 0.25)
+        btn:SetPushedTexture(pushed)
+
+        local highlight = btn:CreateTexture(nil, "HIGHLIGHT")
+        highlight:SetAllPoints()
+        highlight:SetColorTexture(1, 1, 1, 0.2)
+        btn:SetHighlightTexture(highlight)
+
         ApplySpell(btn, TotemBarDB.assigned[element])
 
         btn:HookScript("OnMouseUp", function(self, click)
@@ -223,9 +287,6 @@ local function CreateBar()
             GameTooltip:Show()
         end)
         btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-        local r, g, b = unpack(ELEMENT_COLOR[element])
-        if btn.NormalTexture then btn.NormalTexture:SetVertexColor(r, g, b) end
 
         buttons[element] = btn
     end
@@ -246,10 +307,12 @@ end
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("LEARNED_SPELL_IN_TAB")
+f:RegisterEvent("PLAYER_LOGIN")
+f:RegisterEvent("SPELLS_CHANGED")
 f:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_REGEN_ENABLED" then
         FlushPending()
-    elseif event == "LEARNED_SPELL_IN_TAB" then
+    else
         for element, btn in pairs(buttons) do
             ApplySpell(btn, TotemBarDB.assigned[element])
         end
@@ -260,15 +323,48 @@ SLASH_TOTEMBAR1 = "/totembar"
 SLASH_TOTEMBAR2 = "/tbar"
 SLASH_TOTEMBAR3 = "/tb"
 SlashCmdList["TOTEMBAR"] = function(msg)
-    msg = (msg or ""):lower():match("^%s*(.-)%s*$")
-    if msg == "reset" then
+    msg = (msg or ""):match("^%s*(.-)%s*$")
+    local cmd, arg = msg:match("^(%S+)%s+(.+)$")
+    if cmd then
+        arg = arg:match("^%s*(.-)%s*$")
+    else
+        cmd = msg
+        arg = nil
+    end
+    cmd = cmd:lower()
+
+    if cmd == "reset" then
         TotemBarDB.point = { "CENTER", "UIParent", "CENTER", 0, -150 }
         TotemBarFrame:ClearAllPoints()
         TotemBarFrame:SetPoint(unpack(TotemBarDB.point))
         print("|cffffff00TotemBar:|r position reset.")
+    elseif cmd == "save" then
+        if not arg or arg == "" then
+            print("|cffffff00TotemBar:|r usage: /tb save <name>")
+        else
+            SaveTemplate(arg)
+        end
+    elseif cmd == "load" then
+        if not arg or arg == "" then
+            print("|cffffff00TotemBar:|r usage: /tb load <name>")
+        else
+            LoadTemplate(arg)
+        end
+    elseif cmd == "delete" or cmd == "del" or cmd == "rm" then
+        if not arg or arg == "" then
+            print("|cffffff00TotemBar:|r usage: /tb delete <name>")
+        else
+            DeleteTemplate(arg)
+        end
+    elseif cmd == "list" or cmd == "ls" then
+        ListTemplates()
     else
         print("|cffffff00TotemBar|r commands (try /totembar, /tbar, or /tb):")
-        print("  reset - reset bar position to center")
+        print("  reset           - reset bar position to center")
+        print("  save <name>     - save current 4 totems as a template")
+        print("  load <name>     - apply a saved template")
+        print("  list            - list saved templates")
+        print("  delete <name>   - delete a saved template")
         print("Shift-drag the bar to move it. Right-click a slot to change totem.")
         print("Bind keys via Esc -> Key Bindings -> Totem Bar.")
     end

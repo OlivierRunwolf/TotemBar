@@ -23,7 +23,13 @@ A simple 4-slot totem bar for Shamans in WoW Classic (TBC / Anniversary / Vanill
 |---|---|
 | `/totembar` | Show help |
 | `/totembar reset` | Reset bar position to center-screen |
+| `/tb save <name>` | Save the current 4 totems as a named template |
+| `/tb load <name>` | Apply a saved template |
+| `/tb list` | List saved templates |
+| `/tb delete <name>` | Delete a saved template |
 | `/tbar`, `/tb` | Aliases |
+
+Templates are per-character (stored in saved variables) and case-sensitive — `PvP` and `pvp` are distinct.
 
 ## Limitations
 
