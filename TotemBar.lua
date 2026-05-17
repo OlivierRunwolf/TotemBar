@@ -387,23 +387,28 @@ SlashCmdList["TOTEMBAR"] = function(msg)
 end
 print("|cffffff00TotemBar:|r slash commands registered: /totembar, /tbar, /tb")
 
-local ok, err = pcall(function()
-    EnsureDB()
-    CreateBar()
-end)
-if ok then
-    print("|cff00ff00TotemBar:|r ready. Bar is at center-screen. Type /tb for help.")
-else
-    print("|cffff0000TotemBar ERROR:|r " .. tostring(err))
-end
-
+-- Defer bar creation until ADDON_LOADED for THIS addon, so the saved
+-- variables (TotemBarDB) are guaranteed to be populated from disk.
 local f = CreateFrame("Frame")
+f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("LEARNED_SPELL_IN_TAB")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("SPELLS_CHANGED")
-f:SetScript("OnEvent", function(_, event)
-    if event == "PLAYER_REGEN_ENABLED" then
+f:SetScript("OnEvent", function(self, event, arg1)
+    if event == "ADDON_LOADED" then
+        if arg1 ~= "TotemBar" then return end
+        self:UnregisterEvent("ADDON_LOADED")
+        local ok, err = pcall(function()
+            EnsureDB()
+            CreateBar()
+        end)
+        if ok then
+            print("|cff00ff00TotemBar:|r ready. Type /tb for help.")
+        else
+            print("|cffff0000TotemBar ERROR:|r " .. tostring(err))
+        end
+    elseif event == "PLAYER_REGEN_ENABLED" then
         FlushPending()
     else
         for element, btn in pairs(buttons) do
