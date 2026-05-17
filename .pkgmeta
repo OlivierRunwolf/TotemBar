@@ -1,0 +1,8 @@
+package-as: TotemBar
+
+ignore:
+  - .github
+  - .gitignore
+  - .pkgmeta
+  - logo.svg
+  - logo.png
