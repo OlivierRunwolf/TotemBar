@@ -8,6 +8,9 @@ A simple 4-slot totem bar for Shamans in WoW Classic (TBC / Anniversary / Vanill
 - Right-click a slot to pick which totem goes in it (icons + element-colored menu)
 - Per-slot keybinds in **Esc → Key Bindings → Totem Bar**
 - Shift-drag the bar to move it
+- Shift + mouse-wheel over the bar to scale it (or `/tb scale 0.8`)
+- Named templates: save your PvP/PvE/farm sets and swap with one command
+- Optional Masque support — skin the bar with your favorite button theme
 - Per-character saved settings
 - Greys out totems your character doesn't know
 
@@ -23,6 +26,7 @@ A simple 4-slot totem bar for Shamans in WoW Classic (TBC / Anniversary / Vanill
 |---|---|
 | `/totembar` | Show help |
 | `/totembar reset` | Reset bar position to center-screen |
+| `/tb scale <n>` | Set bar scale (0.4–2.5). Also: Shift + mouse-wheel over the bar |
 | `/tb save <name>` | Save the current 4 totems as a named template |
 | `/tb load <name>` | Apply a saved template |
 | `/tb list` | List saved templates |

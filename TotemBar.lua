@@ -39,6 +39,9 @@ local buttons = {}
 local pendingAssign = {}
 local menu
 
+local Masque = LibStub and LibStub("Masque", true)
+local masqueGroup = Masque and Masque:Group("TotemBar")
+
 local function EnsureDB()
     TotemBarDB = TotemBarDB or {}
     TotemBarDB.assigned = TotemBarDB.assigned or {}
@@ -49,6 +52,16 @@ local function EnsureDB()
     end
     TotemBarDB.point = TotemBarDB.point or { "CENTER", "UIParent", "CENTER", 0, -150 }
     TotemBarDB.templates = TotemBarDB.templates or {}
+    TotemBarDB.scale = TotemBarDB.scale or 1.0
+end
+
+local SCALE_MIN, SCALE_MAX, SCALE_STEP = 0.4, 2.5, 0.05
+
+local function ApplyScale(scale)
+    scale = math.max(SCALE_MIN, math.min(SCALE_MAX, scale))
+    TotemBarDB.scale = scale
+    if TotemBarFrame then TotemBarFrame:SetScale(scale) end
+    return scale
 end
 
 local function ApplySpell(btn, spell)
@@ -239,6 +252,13 @@ local function CreateBar()
         TotemBarDB.point = { p, "UIParent", rp, x, y }
     end)
 
+    frame:SetScale(TotemBarDB.scale)
+    frame:EnableMouseWheel(true)
+    frame:SetScript("OnMouseWheel", function(self, delta)
+        if not IsShiftKeyDown() then return end
+        ApplyScale((TotemBarDB.scale or 1.0) + delta * SCALE_STEP)
+    end)
+
     for i, element in ipairs(ELEMENTS) do
         local btn = CreateFrame(
             "Button",
@@ -269,6 +289,14 @@ local function CreateBar()
         highlight:SetAllPoints()
         highlight:SetColorTexture(1, 1, 1, 0.2)
         btn:SetHighlightTexture(highlight)
+
+        if masqueGroup then
+            masqueGroup:AddButton(btn, {
+                Icon = btn.icon,
+                Pushed = pushed,
+                Highlight = highlight,
+            })
+        end
 
         ApplySpell(btn, TotemBarDB.assigned[element])
 
@@ -358,15 +386,27 @@ SlashCmdList["TOTEMBAR"] = function(msg)
         end
     elseif cmd == "list" or cmd == "ls" then
         ListTemplates()
+    elseif cmd == "scale" then
+        local n = tonumber(arg)
+        if not n then
+            print(string.format("|cffffff00TotemBar:|r scale = %.2f (usage: /tb scale 0.4-2.5)", TotemBarDB.scale or 1.0))
+        else
+            local applied = ApplyScale(n)
+            print(string.format("|cffffff00TotemBar:|r scale set to %.2f", applied))
+        end
     else
         print("|cffffff00TotemBar|r commands (try /totembar, /tbar, or /tb):")
         print("  reset           - reset bar position to center")
+        print("  scale <n>       - set scale (e.g. 0.8). Also Shift+mousewheel over the bar.")
         print("  save <name>     - save current 4 totems as a template")
         print("  load <name>     - apply a saved template")
         print("  list            - list saved templates")
         print("  delete <name>   - delete a saved template")
         print("Shift-drag the bar to move it. Right-click a slot to change totem.")
         print("Bind keys via Esc -> Key Bindings -> Totem Bar.")
+        if Masque then
+            print("Masque detected: theme the bar via /masque.")
+        end
     end
 end
 print("|cffffff00TotemBar:|r slash commands registered: /totembar, /tbar, /tb")
