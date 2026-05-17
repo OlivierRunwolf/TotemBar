@@ -397,14 +397,31 @@ else
     print("|cffff0000TotemBar ERROR:|r " .. tostring(err))
 end
 
+local function ReapplyFromDB()
+    if not TotemBarFrame then return end
+    EnsureDB()
+    TotemBarFrame:ClearAllPoints()
+    TotemBarFrame:SetPoint(unpack(TotemBarDB.point))
+    TotemBarFrame:SetScale(TotemBarDB.scale or 1.0)
+    for element, btn in pairs(buttons) do
+        ApplySpell(btn, TotemBarDB.assigned[element])
+    end
+end
+
 local f = CreateFrame("Frame")
+f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("LEARNED_SPELL_IN_TAB")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("SPELLS_CHANGED")
-f:SetScript("OnEvent", function(_, event)
+f:SetScript("OnEvent", function(_, event, arg1)
     if event == "PLAYER_REGEN_ENABLED" then
         FlushPending()
+    elseif event == "ADDON_LOADED" and arg1 == "TotemBar" then
+        -- Saved variables are guaranteed loaded now. Reapply them in case
+        -- CreateBar at module time used defaults (Classic Era loads SVs
+        -- after addon Lua in some cases).
+        ReapplyFromDB()
     else
         for element, btn in pairs(buttons) do
             ApplySpell(btn, TotemBarDB.assigned[element])
