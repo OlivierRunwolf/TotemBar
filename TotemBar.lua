@@ -220,6 +220,10 @@ local function ShowMenu(element, anchorBtn)
         end
 
         item:SetScript("OnClick", function()
+            if not GetSpellInfo(spell) then
+                print("|cffffff00TotemBar:|r You haven't learned " .. spell .. " yet.")
+                return
+            end
             AssignSpell(element, spell)
             HideMenu()
         end)
