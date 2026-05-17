@@ -322,31 +322,7 @@ local function CreateBar()
     return frame
 end
 
-local ok, err = pcall(function()
-    EnsureDB()
-    CreateBar()
-end)
-if ok then
-    print("|cff00ff00TotemBar:|r ready. Bar is at center-screen. Type /tb for help.")
-else
-    print("|cffff0000TotemBar ERROR:|r " .. tostring(err))
-end
-
-local f = CreateFrame("Frame")
-f:RegisterEvent("PLAYER_REGEN_ENABLED")
-f:RegisterEvent("LEARNED_SPELL_IN_TAB")
-f:RegisterEvent("PLAYER_LOGIN")
-f:RegisterEvent("SPELLS_CHANGED")
-f:SetScript("OnEvent", function(_, event)
-    if event == "PLAYER_REGEN_ENABLED" then
-        FlushPending()
-    else
-        for element, btn in pairs(buttons) do
-            ApplySpell(btn, TotemBarDB.assigned[element])
-        end
-    end
-end)
-
+-- Register slash commands FIRST so they always work even if something later errors.
 SLASH_TOTEMBAR1 = "/totembar"
 SLASH_TOTEMBAR2 = "/tbar"
 SLASH_TOTEMBAR3 = "/tb"
@@ -410,3 +386,28 @@ SlashCmdList["TOTEMBAR"] = function(msg)
     end
 end
 print("|cffffff00TotemBar:|r slash commands registered: /totembar, /tbar, /tb")
+
+local ok, err = pcall(function()
+    EnsureDB()
+    CreateBar()
+end)
+if ok then
+    print("|cff00ff00TotemBar:|r ready. Bar is at center-screen. Type /tb for help.")
+else
+    print("|cffff0000TotemBar ERROR:|r " .. tostring(err))
+end
+
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_REGEN_ENABLED")
+f:RegisterEvent("LEARNED_SPELL_IN_TAB")
+f:RegisterEvent("PLAYER_LOGIN")
+f:RegisterEvent("SPELLS_CHANGED")
+f:SetScript("OnEvent", function(_, event)
+    if event == "PLAYER_REGEN_ENABLED" then
+        FlushPending()
+    else
+        for element, btn in pairs(buttons) do
+            ApplySpell(btn, TotemBarDB.assigned[element])
+        end
+    end
+end)
