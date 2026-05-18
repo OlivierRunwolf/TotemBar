@@ -442,6 +442,11 @@ f:SetScript("OnEvent", function(_, event, arg1)
     end
 end)
 
+print("|cffff9999TotemBar DBG:|r reached event setup; C_Timer type = " .. type(C_Timer))
+
 if C_Timer and C_Timer.After then
     C_Timer.After(2, function() ReapplyFromDB("timer-2s") end)
+    print("|cffff9999TotemBar DBG:|r scheduled C_Timer.After(2)")
 end
+
+print("|cffff9999TotemBar DBG:|r module load complete")
