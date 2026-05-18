@@ -1,4 +1,4 @@
-print("|cffffff00TotemBar:|r loading (v1.2)")
+print("|cffffff00TotemBar:|r loading (v1.3)")
 
 local ELEMENTS = { "Fire", "Earth", "Air", "Water" }
 
