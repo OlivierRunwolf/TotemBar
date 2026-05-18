@@ -403,14 +403,14 @@ end
 
 local function ReapplyFromDB(reason)
     if not TotemBarFrame then
-        print("|cffff9999TotemBar DBG:|r ReapplyFromDB(" .. tostring(reason) .. ") skipped - TotemBarFrame nil")
+        print("TotemBar DBG:ReapplyFromDB(" .. tostring(reason) .. ") skipped - TotemBarFrame nil")
         return
     end
     EnsureDB()
     local count = 0
     for _ in pairs(buttons) do count = count + 1 end
     print(string.format(
-        "|cffff9999TotemBar DBG:|r Reapply(%s) buttons=%d Earth=%s Fire=%s Water=%s Air=%s",
+        "TotemBar DBG:Reapply(%s) buttons=%d Earth=%s Fire=%s Water=%s Air=%s",
         tostring(reason), count,
         tostring(TotemBarDB.assigned.Earth),
         tostring(TotemBarDB.assigned.Fire),
@@ -426,12 +426,19 @@ local function ReapplyFromDB(reason)
 end
 
 local f = CreateFrame("Frame")
-f:RegisterEvent("ADDON_LOADED")
-f:RegisterEvent("PLAYER_LOGIN")
-f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:RegisterEvent("PLAYER_REGEN_ENABLED")
-f:RegisterEvent("LEARNED_SPELL_IN_TAB")
-f:RegisterEvent("SPELLS_CHANGED")
+
+local function SafeRegister(event)
+    local ok = pcall(f.RegisterEvent, f, event)
+    print("TotemBar DBG: register " .. event .. " -> " .. (ok and "OK" or "FAIL"))
+end
+
+SafeRegister("ADDON_LOADED")
+SafeRegister("PLAYER_LOGIN")
+SafeRegister("PLAYER_ENTERING_WORLD")
+SafeRegister("PLAYER_REGEN_ENABLED")
+SafeRegister("LEARNED_SPELL_IN_TAB")
+SafeRegister("SPELLS_CHANGED")
+
 f:SetScript("OnEvent", function(_, event, arg1)
     if event == "PLAYER_REGEN_ENABLED" then
         FlushPending()
@@ -442,11 +449,11 @@ f:SetScript("OnEvent", function(_, event, arg1)
     end
 end)
 
-print("|cffff9999TotemBar DBG:|r reached event setup; C_Timer type = " .. type(C_Timer))
+print("TotemBar DBG: reached event setup; C_Timer type = " .. type(C_Timer))
 
 if C_Timer and C_Timer.After then
     C_Timer.After(2, function() ReapplyFromDB("timer-2s") end)
-    print("|cffff9999TotemBar DBG:|r scheduled C_Timer.After(2)")
+    print("TotemBar DBG: scheduled C_Timer.After(2)")
 end
 
-print("|cffff9999TotemBar DBG:|r module load complete")
+print("TotemBar DBG: module load complete")
