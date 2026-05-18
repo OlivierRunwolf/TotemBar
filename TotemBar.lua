@@ -401,9 +401,22 @@ else
     print("|cffff0000TotemBar ERROR:|r " .. tostring(err))
 end
 
-local function ReapplyFromDB()
-    if not TotemBarFrame then return end
+local function ReapplyFromDB(reason)
+    if not TotemBarFrame then
+        print("|cffff9999TotemBar DBG:|r ReapplyFromDB(" .. tostring(reason) .. ") skipped - TotemBarFrame nil")
+        return
+    end
     EnsureDB()
+    local count = 0
+    for _ in pairs(buttons) do count = count + 1 end
+    print(string.format(
+        "|cffff9999TotemBar DBG:|r Reapply(%s) buttons=%d Earth=%s Fire=%s Water=%s Air=%s",
+        tostring(reason), count,
+        tostring(TotemBarDB.assigned.Earth),
+        tostring(TotemBarDB.assigned.Fire),
+        tostring(TotemBarDB.assigned.Water),
+        tostring(TotemBarDB.assigned.Air)
+    ))
     TotemBarFrame:ClearAllPoints()
     TotemBarFrame:SetPoint(unpack(TotemBarDB.point))
     TotemBarFrame:SetScale(TotemBarDB.scale or 1.0)
@@ -423,15 +436,12 @@ f:SetScript("OnEvent", function(_, event, arg1)
     if event == "PLAYER_REGEN_ENABLED" then
         FlushPending()
     elseif event == "ADDON_LOADED" then
-        if arg1 == "TotemBar" then ReapplyFromDB() end
+        if arg1 == "TotemBar" then ReapplyFromDB("ADDON_LOADED") end
     else
-        ReapplyFromDB()
+        ReapplyFromDB(event)
     end
 end)
 
--- Belt-and-suspenders for Classic Era's saved-variables timing quirks:
--- a delayed reapply after addon load catches any case where every event
--- above fires before TotemBarDB has been populated from disk.
 if C_Timer and C_Timer.After then
-    C_Timer.After(2, ReapplyFromDB)
+    C_Timer.After(2, function() ReapplyFromDB("timer-2s") end)
 end
