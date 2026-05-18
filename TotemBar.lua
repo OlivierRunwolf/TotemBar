@@ -1,4 +1,4 @@
-print("|cffffff00TotemBar:|r loading (v1.2)...")
+print("|cffffff00TotemBar:|r loading (v1.2)")
 
 local ELEMENTS = { "Fire", "Earth", "Air", "Water" }
 
@@ -401,22 +401,9 @@ else
     print("|cffff0000TotemBar ERROR:|r " .. tostring(err))
 end
 
-local function ReapplyFromDB(reason)
-    if not TotemBarFrame then
-        print("TotemBar DBG:ReapplyFromDB(" .. tostring(reason) .. ") skipped - TotemBarFrame nil")
-        return
-    end
+local function ReapplyFromDB()
+    if not TotemBarFrame then return end
     EnsureDB()
-    local count = 0
-    for _ in pairs(buttons) do count = count + 1 end
-    print(string.format(
-        "TotemBar DBG:Reapply(%s) buttons=%d Earth=%s Fire=%s Water=%s Air=%s",
-        tostring(reason), count,
-        tostring(TotemBarDB.assigned.Earth),
-        tostring(TotemBarDB.assigned.Fire),
-        tostring(TotemBarDB.assigned.Water),
-        tostring(TotemBarDB.assigned.Air)
-    ))
     TotemBarFrame:ClearAllPoints()
     TotemBarFrame:SetPoint(unpack(TotemBarDB.point))
     TotemBarFrame:SetScale(TotemBarDB.scale or 1.0)
@@ -427,9 +414,11 @@ end
 
 local f = CreateFrame("Frame")
 
+-- pcall each RegisterEvent: some events (e.g. LEARNED_SPELL_IN_TAB) don't
+-- exist in every Classic flavour, and a bare RegisterEvent on a missing
+-- event throws and halts the rest of module-level execution.
 local function SafeRegister(event)
-    local ok = pcall(f.RegisterEvent, f, event)
-    print("TotemBar DBG: register " .. event .. " -> " .. (ok and "OK" or "FAIL"))
+    pcall(f.RegisterEvent, f, event)
 end
 
 SafeRegister("ADDON_LOADED")
@@ -443,17 +432,12 @@ f:SetScript("OnEvent", function(_, event, arg1)
     if event == "PLAYER_REGEN_ENABLED" then
         FlushPending()
     elseif event == "ADDON_LOADED" then
-        if arg1 == "TotemBar" then ReapplyFromDB("ADDON_LOADED") end
+        if arg1 == "TotemBar" then ReapplyFromDB() end
     else
-        ReapplyFromDB(event)
+        ReapplyFromDB()
     end
 end)
 
-print("TotemBar DBG: reached event setup; C_Timer type = " .. type(C_Timer))
-
 if C_Timer and C_Timer.After then
-    C_Timer.After(2, function() ReapplyFromDB("timer-2s") end)
-    print("TotemBar DBG: scheduled C_Timer.After(2)")
+    C_Timer.After(2, ReapplyFromDB)
 end
-
-print("TotemBar DBG: module load complete")
