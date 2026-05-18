@@ -2,7 +2,7 @@
 ## Title: Totem Bar
 ## Notes: 4-slot totem bar for Shamans (Fire/Earth/Air/Water) with keybinds.
 ## Author: Olivier
-## Version: 1.3
+## Version: 1.4
 ## SavedVariables: TotemBarDB
 ## OptionalDeps: Masque
 ## X-Curse-Project-ID: 1545966

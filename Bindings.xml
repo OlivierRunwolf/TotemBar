@@ -1,6 +1,6 @@
 <Bindings>
-    <Binding name="CLICK TotemBarButtonFire:LeftButton"  header="TOTEMBAR" category="Totem Bar"/>
+    <Binding name="CLICK TotemBarButtonFire:LeftButton" header="TOTEMBAR" category="Totem Bar"/>
     <Binding name="CLICK TotemBarButtonEarth:LeftButton" category="Totem Bar"/>
-    <Binding name="CLICK TotemBarButtonAir:LeftButton"   category="Totem Bar"/>
+    <Binding name="CLICK TotemBarButtonAir:LeftButton" category="Totem Bar"/>
     <Binding name="CLICK TotemBarButtonWater:LeftButton" category="Totem Bar"/>
 </Bindings>

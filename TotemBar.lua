@@ -1,6 +1,7 @@
 print("|cffffff00TotemBar:|r loading (v1.3)")
 
 local ELEMENTS = { "Fire", "Earth", "Air", "Water" }
+local TOTEM_SLOT = { Fire = 1, Earth = 2, Water = 3, Air = 4 }
 
 local TOTEMS = {
     Fire = {
@@ -233,20 +234,52 @@ local function ShowMenu(element, anchorBtn)
 end
 
 local function CreateBar()
+    local BORDER_T = 5
+    local FRAME_W, FRAME_H = 44 * 4 + 20, 60
     local frame = CreateFrame("Frame", "TotemBarFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(44 * 4 + 8, 48)
+    frame:SetSize(FRAME_W, FRAME_H)
     frame:SetPoint(unpack(TotemBarDB.point))
     frame:SetMovable(true)
     frame:EnableMouse(true)
     frame:RegisterForDrag("LeftButton")
     frame:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 12,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 },
+        insets = { left = BORDER_T, right = BORDER_T, top = BORDER_T, bottom = BORDER_T },
     })
-    frame:SetBackdropColor(0, 0, 0, 0.6)
-    frame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    frame:SetBackdropColor(0, 0, 0, 0.7)
+
+    -- Element-colored border, one segment per totem column
+    local BTN_STRIDE = 44
+    local BTN_OFFSET = 12
+    -- Boundary between button i and i+1: midpoint of the gap between them
+    -- = i * stride + offset - (stride - width) / 2, with width 40
+    local segX = { 0 }
+    for i = 1, #ELEMENTS - 1 do
+        segX[i + 1] = i * BTN_STRIDE + BTN_OFFSET - (BTN_STRIDE - 40) / 2
+    end
+    segX[#ELEMENTS + 1] = FRAME_W
+    for i, element in ipairs(ELEMENTS) do
+        local r, g, b = unpack(ELEMENT_COLOR[element])
+        local x1, x2 = segX[i], segX[i + 1]
+        local top = frame:CreateTexture(nil, "OVERLAY")
+        top:SetPoint("TOPLEFT", frame, "TOPLEFT", x1, 0)
+        top:SetPoint("BOTTOMRIGHT", frame, "TOPLEFT", x2, -BORDER_T)
+        top:SetColorTexture(r, g, b, 1)
+        local bot = frame:CreateTexture(nil, "OVERLAY")
+        bot:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", x1, BORDER_T)
+        bot:SetPoint("BOTTOMRIGHT", frame, "BOTTOMLEFT", x2, 0)
+        bot:SetColorTexture(r, g, b, 1)
+    end
+    local lr, lg, lb = unpack(ELEMENT_COLOR[ELEMENTS[1]])
+    local leftEdge = frame:CreateTexture(nil, "OVERLAY")
+    leftEdge:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -BORDER_T)
+    leftEdge:SetPoint("BOTTOMRIGHT", frame, "BOTTOMLEFT", BORDER_T, BORDER_T)
+    leftEdge:SetColorTexture(lr, lg, lb, 1)
+    local rr, rg, rb = unpack(ELEMENT_COLOR[ELEMENTS[#ELEMENTS]])
+    local rightEdge = frame:CreateTexture(nil, "OVERLAY")
+    rightEdge:SetPoint("TOPLEFT", frame, "TOPRIGHT", -BORDER_T, -BORDER_T)
+    rightEdge:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, BORDER_T)
+    rightEdge:SetColorTexture(rr, rg, rb, 1)
     frame:SetScript("OnDragStart", function(self)
         if IsShiftKeyDown() then self:StartMoving() end
     end)
@@ -271,7 +304,7 @@ local function CreateBar()
             "SecureActionButtonTemplate"
         )
         btn:SetSize(40, 40)
-        btn:SetPoint("LEFT", frame, "LEFT", (i - 1) * 44 + 4, 0)
+        btn:SetPoint("LEFT", frame, "LEFT", (i - 1) * BTN_STRIDE + BTN_OFFSET, 0)
         btn:RegisterForClicks("AnyDown", "AnyUp")
 
         local r, g, b = unpack(ELEMENT_COLOR[element])
@@ -283,6 +316,13 @@ local function CreateBar()
         btn.icon = btn:CreateTexture(nil, "ARTWORK")
         btn.icon:SetAllPoints()
         btn.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        btn.totemSlot = TOTEM_SLOT[element]
+        btn.timer = btn:CreateFontString(nil, "OVERLAY")
+        btn.timer:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+        btn.timer:SetPoint("TOP", btn, "TOP", 0, -1)
+        btn.timer:SetTextColor(1, 1, 1, 1)
+        btn.timer:Hide()
 
         local pushed = btn:CreateTexture(nil, "ARTWORK")
         pushed:SetAllPoints()
@@ -321,6 +361,35 @@ local function CreateBar()
         btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
         buttons[element] = btn
+    end
+
+    local function FormatTimer(s)
+        if s >= 60 then
+            return string.format("%d:%02d", math.floor(s / 60), math.floor(s % 60))
+        end
+        return string.format("%d", math.ceil(s))
+    end
+    if GetTotemInfo then
+        local elapsed = 0
+        frame:SetScript("OnUpdate", function(self, dt)
+            elapsed = elapsed + dt
+            if elapsed < 0.1 then return end
+            elapsed = 0
+            for _, btn in pairs(buttons) do
+                local have, _, startTime, duration = GetTotemInfo(btn.totemSlot)
+                if have and startTime and duration and duration > 0 then
+                    local remaining = (startTime + duration) - GetTime()
+                    if remaining > 0 then
+                        btn.timer:SetText(FormatTimer(remaining))
+                        btn.timer:Show()
+                    else
+                        btn.timer:Hide()
+                    end
+                else
+                    btn.timer:Hide()
+                end
+            end
+        end)
     end
 
     return frame
