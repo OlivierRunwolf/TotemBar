@@ -414,21 +414,24 @@ end
 
 local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED")
+f:RegisterEvent("PLAYER_LOGIN")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("LEARNED_SPELL_IN_TAB")
-f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("SPELLS_CHANGED")
 f:SetScript("OnEvent", function(_, event, arg1)
     if event == "PLAYER_REGEN_ENABLED" then
         FlushPending()
-    elseif event == "ADDON_LOADED" and arg1 == "TotemBar" then
-        -- Saved variables are guaranteed loaded now. Reapply them in case
-        -- CreateBar at module time used defaults (Classic Era loads SVs
-        -- after addon Lua in some cases).
-        ReapplyFromDB()
+    elseif event == "ADDON_LOADED" then
+        if arg1 == "TotemBar" then ReapplyFromDB() end
     else
-        for element, btn in pairs(buttons) do
-            ApplySpell(btn, TotemBarDB.assigned[element])
-        end
+        ReapplyFromDB()
     end
 end)
+
+-- Belt-and-suspenders for Classic Era's saved-variables timing quirks:
+-- a delayed reapply after addon load catches any case where every event
+-- above fires before TotemBarDB has been populated from disk.
+if C_Timer and C_Timer.After then
+    C_Timer.After(2, ReapplyFromDB)
+end
