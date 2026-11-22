@@ -1,4 +1,24 @@
-print("|cffffff00TotemBar:|r loading (v1.3)")
+local GetAddOnMetadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+local VERSION = (GetAddOnMetadata and GetAddOnMetadata("TotemBar", "Version")) or "?"
+print("|cffffff00TotemBar:|r loading (v" .. VERSION .. ")")
+
+-- Newer clients (WoW Forever) have no global GetSpellInfo, only C_Spell.
+-- This shim keeps the classic contract: name is nil when the spell isn't
+-- known; the icon is still returned so the menu can show it greyed out.
+local GetSpellInfo = GetSpellInfo or function(spell)
+    if not (C_Spell and C_Spell.GetSpellInfo) then return nil end
+    local ok, info = pcall(C_Spell.GetSpellInfo, spell)
+    if not ok or type(info) ~= "table" then return nil end
+    if info.spellID and C_SpellBook and C_SpellBook.IsSpellInSpellBook then
+        local ok2, inBook = pcall(C_SpellBook.IsSpellInSpellBook, info.spellID)
+        if ok2 and inBook == false then return nil, nil, info.iconID end
+    end
+    return info.name, nil, info.iconID
+end
+
+local function IsSecret(v)
+    return issecretvalue and issecretvalue(v)
+end
 
 local ELEMENTS = { "Fire", "Earth", "Air", "Water" }
 local TOTEM_SLOT = { Fire = 1, Earth = 2, Water = 3, Air = 4 }
@@ -14,8 +34,8 @@ local TOTEMS = {
     },
     Air = {
         "Windfury Totem", "Grace of Air Totem", "Grounding Totem",
-        "Nature Resistance Totem", "Wrath of Air Totem", "Sentry Totem",
-        "Tranquil Air Totem",
+        "Nature Resistance Totem", "Wrath of Air Totem", "Windwall Totem",
+        "Sentry Totem", "Tranquil Air Totem",
     },
     Water = {
         "Healing Stream Totem", "Mana Spring Totem", "Poison Cleansing Totem",
@@ -376,8 +396,10 @@ local function CreateBar()
             if elapsed < 0.1 then return end
             elapsed = 0
             for _, btn in pairs(buttons) do
-                local have, _, startTime, duration = GetTotemInfo(btn.totemSlot)
-                if have and startTime and duration and duration > 0 then
+                local ok, have, _, startTime, duration = pcall(GetTotemInfo, btn.totemSlot)
+                if ok and not IsSecret(have) and not IsSecret(startTime)
+                    and not IsSecret(duration) and have and startTime
+                    and duration and duration > 0 then
                     local remaining = (startTime + duration) - GetTime()
                     if remaining > 0 then
                         btn.timer:SetText(FormatTimer(remaining))
