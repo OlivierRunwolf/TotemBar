@@ -1,6 +1,6 @@
-## Interface: 20506, 11509
+## Interface: 16001
 ## Title: Totem Bar
-## Notes: 4-slot totem bar for Shamans (Fire/Earth/Air/Water) with keybinds.
+## Notes: 4-slot totem bar for Shamans (WoW Forever) (Fire/Earth/Air/Water) with keybinds.
 ## Author: Olivier
 ## Version: 1.5
 ## SavedVariables: TotemBarDB

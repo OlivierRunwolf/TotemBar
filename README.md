@@ -1,6 +1,9 @@
 # TotemBar
 
-A simple 4-slot totem bar for Shamans in WoW Classic (TBC / Anniversary / Vanilla). Pick one totem per element, bind a key per slot, cast with one press.
+A simple 4-slot totem bar for Shamans in **WoW Forever** (client 1.60, interface 16001).
+
+> This is the `forever` branch. For TBC Anniversary, use the `anniversary` branch / the `-anniversary` releases.
+ Pick one totem per element, bind a key per slot, cast with one press.
 
 ## Features
 
@@ -37,7 +40,8 @@ Templates are per-character (stored in saved variables) and case-sensitive — `
 
 ## Limitations
 
-- No "Call of the Elements" one-button-cast-all. WoW's protected code requires one hardware event per spell cast, so 4 keybinds is the maximum that's possible from an addon.
+- No one-button-cast-all from the addon itself (WoW requires one hardware event per cast). WoW Forever has its own built-in Call of the Elements / Ancestors / Spirits spells for that; TotemBar is for casting single totems.
+- Fire Nova Totem and Tranquil Air Totem are still listed. Some beta guides say Forever removed them. If they were removed, they stay greyed out in the menu.
 
 ## License
 

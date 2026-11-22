@@ -26,15 +26,15 @@ local TOTEM_SLOT = { Fire = 1, Earth = 2, Water = 3, Air = 4 }
 local TOTEMS = {
     Fire = {
         "Searing Totem", "Magma Totem", "Fire Nova Totem",
-        "Flametongue Totem", "Frost Resistance Totem", "Totem of Wrath",
+        "Flametongue Totem", "Frost Resistance Totem",
     },
     Earth = {
         "Stoneskin Totem", "Stoneclaw Totem", "Strength of Earth Totem",
-        "Tremor Totem", "Earthbind Totem", "Earth Elemental Totem",
+        "Tremor Totem", "Earthbind Totem",
     },
     Air = {
         "Windfury Totem", "Grace of Air Totem", "Grounding Totem",
-        "Nature Resistance Totem", "Wrath of Air Totem", "Windwall Totem",
+        "Nature Resistance Totem", "Windwall Totem",
         "Sentry Totem", "Tranquil Air Totem",
     },
     Water = {
