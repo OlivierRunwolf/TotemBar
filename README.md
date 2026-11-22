@@ -1,6 +1,9 @@
 # TotemBar
 
-A simple 4-slot totem bar for Shamans in WoW Classic (TBC / Anniversary / Vanilla). Pick one totem per element, bind a key per slot, cast with one press.
+A simple 4-slot totem bar for Shamans in WoW Classic (TBC / Anniversary / Vanilla).
+
+> This is the `anniversary` branch (TBC Anniversary 2.5.6). For WoW Forever, use the `forever` branch / the `-forever` releases.
+ Pick one totem per element, bind a key per slot, cast with one press.
 
 ## Features
 
